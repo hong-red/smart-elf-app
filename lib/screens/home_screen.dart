@@ -316,7 +316,6 @@ class _HomeScreenState extends State<HomeScreen> {
         isScrollControlled: true,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setSheet) {
-            final cur = {...chosen};
             return SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -328,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('选择素材（可多选）', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('已选 ${cur.length}', style: const TextStyle(color: Colors.grey)),
+                        Text('已选 ${chosen.length}', style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
                   ),
@@ -339,13 +338,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         final id = (m['id'] as num?)?.toInt() ?? 0;
                         final name = m['name']?.toString() ?? '';
                         return CheckboxListTile(
-                          value: cur.contains(id),
+                          value: chosen.contains(id),
                           title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
                           onChanged: (v) => setSheet(() {
                             if (v == true) {
-                              cur.add(id);
+                              chosen.add(id);
                             } else {
-                              cur.remove(id);
+                              chosen.remove(id);
                             }
                           }),
                         );
@@ -355,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: FilledButton(
-                      onPressed: () => Navigator.pop(ctx, all.where((m) => cur.contains((m['id'] as num?)?.toInt() ?? 0)).toList()),
+                      onPressed: () => Navigator.pop(ctx, all.where((m) => chosen.contains((m['id'] as num?)?.toInt() ?? 0)).toList()),
                       child: const Text('确定'),
                     ),
                   ),
