@@ -31,6 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final _title = TextEditingController();
   final _content = TextEditingController();
   final _feedback = TextEditingController();
+  final _materialReq = TextEditingController();
+  final List<Map<String, String>> _selectedMaterials = [];
 
   // 第 3 步
   final _imgQuery = TextEditingController();
@@ -61,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    for (final c in [_topic, _style, _extra, _title, _content, _feedback, _imgQuery, _result]) {
+    for (final c in [_topic, _style, _extra, _title, _content, _feedback, _materialReq, _imgQuery, _result]) {
       c.dispose();
     }
     super.dispose();
@@ -168,6 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
         'template': _template,
         'feedback': '',
         'previous_content': '',
+        'material_ids': _materialIds(),
+        'material_note': _materialReq.text.trim(),
       });
       setState(() => _content.text = r['content']);
     } catch (e) { _toast(e.toString().replaceFirst('Exception: ', '')); }
@@ -187,6 +191,8 @@ class _HomeScreenState extends State<HomeScreen> {
         'template': _template,
         'feedback': _feedback.text.trim(),
         'previous_content': _content.text,
+        'material_ids': _materialIds(),
+        'material_note': _materialReq.text.trim(),
       });
       setState(() { _content.text = r['content']; _feedback.clear(); });
     } catch (e) { _toast(e.toString().replaceFirst('Exception: ', '')); }
@@ -289,6 +295,87 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       );
+    } catch (e) { _toast(e.toString().replaceFirst('Exception: ', '')); }
+  }
+
+  List<int> _materialIds() => _selectedMaterials
+      .map((m) => int.tryParse(m['id'] ?? ''))
+      .whereType<int>()
+      .toList();
+
+  Future<void> _pickMaterials() async {
+    try {
+      final items = await Api.get('/api/materials');
+      final all = (items as List?) ?? [];
+      if (all.isEmpty) { _toast('素材库还是空的，先去「本地库」上传素材'); return; }
+      if (!mounted) return;
+      final chosen = <int>{ for (final m in _selectedMaterials) int.tryParse(m['id'] ?? '') ?? -1 };
+      chosen.remove(-1);
+      final picked = await showModalBottomSheet<List<dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setSheet) {
+            final cur = {...chosen};
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('选择素材（可多选）', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('已选 ${cur.length}', style: const TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: all.map((m) {
+                        final id = (m['id'] as num?)?.toInt() ?? 0;
+                        final name = m['name']?.toString() ?? '';
+                        return CheckboxListTile(
+                          value: cur.contains(id),
+                          title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          onChanged: (v) => setSheet(() {
+                            if (v == true) {
+                              cur.add(id);
+                            } else {
+                              cur.remove(id);
+                            }
+                          }),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx, all.where((m) => cur.contains((m['id'] as num?)?.toInt() ?? 0)).toList()),
+                      child: const Text('确定'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+      if (picked != null && mounted) {
+        setState(() {
+          _selectedMaterials.clear();
+          for (final m in picked) {
+            _selectedMaterials.add({
+              'id': ((m['id'] as num?)?.toInt() ?? 0).toString(),
+              'name': m['name']?.toString() ?? '素材',
+            });
+          }
+        });
+      }
     } catch (e) { _toast(e.toString().replaceFirst('Exception: ', '')); }
   }
 
@@ -551,6 +638,30 @@ class _HomeScreenState extends State<HomeScreen> {
             OutlinedButton(onPressed: _refine, child: const Text('按意见重写')),
           ],
         ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _field('需要根据素材库进行优化', _materialReq, maxLines: 2, hint: '例如：结合所选素材补充数据与观点')),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _pickMaterials,
+              icon: const Icon(Icons.folder_open),
+              label: const Text('从素材库选择'),
+            ),
+          ],
+        ),
+        if (_selectedMaterials.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _selectedMaterials.map((m) => Chip(
+              label: Text(m['name'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+              onDeleted: () => setState(() => _selectedMaterials.remove(m)),
+            )).toList(),
+          ),
+        ],
       ],
     );
   }
