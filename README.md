@@ -1,6 +1,24 @@
 # 妙文 App（Flutter 原生安卓客户端）
 
-面向小白的公众号文章生成器移动端。原生 Flutter 界面，配合后端 `Article-Agent-App`（FastAPI）使用。
+面向小白的公众号文章生成器移动端。原生 Flutter 界面，配合托管版后端
+[`Article-Agent-App`](https://github.com/hong-red/Article-Agent-App)（FastAPI）使用。
+
+> **妙文系列** · 一套由 DeepSeek 驱动的「公众号文章生成器」，由三个仓库协作组成：
+> [**🌐 网页版 `Article-Agent`**](https://github.com/hong-red/Article-Agent)（自托管后端 + 网页）
+> · [**☁️ 托管版 `Article-Agent-App`**](https://github.com/hong-red/Article-Agent-App)（多用户后端 + PWA）
+> · [**📱 安卓客户端 `smart-elf-app`**](https://github.com/hong-red/smart-elf-app)（Flutter 原生 App）
+
+| 仓库 | 定位 | 面向 | 部署 | 鉴权 | 数据 |
+| --- | --- | --- | --- | --- | --- |
+| **网页版** [`Article-Agent`](https://github.com/hong-red/Article-Agent) | 自托管网页工具 | 技术用户 | 用户自己一键部署 | 访问口令 | 本地 |
+| **托管版** [`Article-Agent-App`](https://github.com/hong-red/Article-Agent-App) | 多用户后端 + PWA | 小白用户 | 托管方部署 | 账号 + 邀请码 | 服务端（加密，按用户隔离） |
+| **安卓客户端** [`smart-elf-app`](https://github.com/hong-red/smart-elf-app) | Flutter 原生 App | 手机用户 | 安装 APK | 账号 + 邀请码 | 复用托管版后端 |
+
+> **一句话关系**：**网页版是能力母体**（四步生成 + 推送的完整实现）；**托管版**在其之上增加
+> 登录 / 邀请码 / 密钥加密 / 多用户隔离 / 数据导出，把同一套接口做成多人服务；
+> **安卓客户端**则是连接托管版后端的 Flutter 原生外壳。
+
+---
 
 ## 功能
 
@@ -40,4 +58,11 @@ flutter build apk --release
 
 ## 后端
 
-本 App 的后端是 `github.com/hong-red/Article-Agent-App`（FastAPI 多用户版），默认地址 `http://81.70.191.44:8001`（App 设置里可改）。
+本 App 的后端是 [`Article-Agent-App`](https://github.com/hong-red/Article-Agent-App)（FastAPI 多用户版），
+默认地址 `http://81.70.191.44:8001`（App 设置里可改）。该后端的生成能力来源于网页版
+[`Article-Agent`](https://github.com/hong-red/Article-Agent)。
+
+## 相关仓库
+
+- **[`Article-Agent-App`](https://github.com/hong-red/Article-Agent-App)**：托管版后端 + PWA（本 App 默认连接的服务端）。
+- **[`Article-Agent`](https://github.com/hong-red/Article-Agent)**：网页版（自托管，能力母体）。
